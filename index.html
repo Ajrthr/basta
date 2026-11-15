@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday! 🎈 Scrapbook Memories</title>
+    <meta name="theme-color" content="#050b14">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Flaticon UICons CDNs (Regular Rounded & Solid Straight) -->
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-solid-rounded/css/uicons-solid-rounded.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.1.0/uicons-bold-rounded/css/uicons-bold-rounded.css">
+    <!-- FontAwesome Fallback CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- External stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="font-body min-h-screen flex flex-col justify-between selection:bg-iceBlue selection:text-navyDeep relative overflow-x-hidden">
+
+    <!-- FLOATING SCRAPBOOK STICKER TOOLBOX -->
+    <div class="fixed bottom-4 right-4 z-50">
+        <button onclick="toggleStickerMenu()" class="bg-iceBlue text-navyDeep hover:bg-warmIce p-3.5 rounded-full shadow-2xl border-2 border-white font-bold font-playful flex items-center space-x-2 transition-transform active:scale-95">
+            <i class="fi fi-rr-sticker-sticker text-xl flex items-center"></i>
+            <span class="text-xs sm:text-sm">Sticker Scrapbook</span>
+        </button>
+
+        <!-- Sticker Drawer -->
+        <div id="stickerDrawer" class="hidden absolute bottom-16 right-0 bg-slateNavy/95 backdrop-blur-md border-2 border-iceBlue/50 p-4 rounded-2xl shadow-2xl w-72 sm:w-80 text-white z-50">
+            <div class="flex justify-between items-center mb-2 border-b border-iceBlue/30 pb-2">
+                <span class="font-playful text-xs font-bold text-iceBlue flex items-center gap-1.5">
+                    <i class="fi fi-rr-sparkles"></i> Tap to spawn stickers (Drag anywhere!)
+                </span>
+                <button onclick="toggleStickerMenu()" class="text-iceBlue text-sm font-bold hover:text-white p-1">
+                    <i class="fi fi-rr-cross flex items-center"></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-2 text-2xl text-center max-h-48 overflow-y-auto p-1">
+                <button onclick="spawnSticker('⭐')" class="p-2 hover:bg-blue-900/60 rounded-xl transition-all">⭐</button>
+                <button onclick="spawnSticker('💙')" class="p-2 hover:bg-blue-900/60 rounded-xl transition-all">💙</button>
+                <button onclick="spawnSticker('🎂')" class="p-2 hover:bg-blue-900/60 rounded-xl transition-all">🎂</button>
+                <button onclick="spawnSticker('👑')" class="p-2 hover:bg-blue-900/60 rounded-xl transition-all">👑</button>
+                <button onclick="spawnSticker('🎈')" class="p-2 hover:bg-blue-900/60 rounded-xl transition-all">🎈</button>
+                <button onclick="spawnSticker('🎁')" class="p-2 hover:bg-blue-900/60 rounded-xl transition-all">🎁</button>
+                <button onclick="spawnSticker('✨')" class="p-2 hover:bg-blue-900/60 rounded-xl transition-all">✨</button>
+                <button onclick="spawnSticker('🎉')" class="p-2 hover:bg-blue-900/60 rounded-xl transition-all">🎉</button>
+                <button onclick="spawnSticker('📸')" class="p-2 hover:bg-blue-900/60 rounded-xl transition-all">📸</button>
+                <button onclick="spawnSticker('📜')" class="p-2 hover:bg-blue-900/60 rounded-xl transition-all">📜</button>
+                <button onclick="spawnSticker('🧁')" class="p-2 hover:bg-blue-900/60 rounded-xl transition-all">🧁</button>
+                <button onclick="spawnSticker('🥂')" class="p-2 hover:bg-blue-900/60 rounded-xl transition-all">🥂</button>
+            </div>
+            <button onclick="clearAllStickers()" class="mt-3 w-full text-xs font-playful text-warmIce bg-midnight/70 hover:bg-midnight border border-iceBlue/30 rounded-xl py-2 flex items-center justify-center gap-1.5"><i class="fi fi-rr-refresh text-xs"></i> Clear all stickers</button>
+        </div>
+    </div>
+
+    <!-- CANVAS / BOARD FOR DRAGGABLE STICKERS -->
+    <div id="stickerCanvas" class="fixed inset-0 pointer-events-none z-30"></div>
+
+    <!-- WELCOME SCREEN WITH LOCK COUNTDOWN -->
+    <div id="welcome-screen" class="welcome-screen">
+        <div class="welcome-card">
+            <div class="welcome-badge">
+                <i class="fi fi-rr-gift"></i> Special Surprise
+            </div>
+            <!-- EDITABLE: Recipient Name -->
+            <h1 class="welcome-title">Hapeh Bortdey,<span class="highlight-name">Bebiii</span>! ✨</h1>
+            <p class="welcome-sub">HAVE A BLAST!!</p>
+            
+            <!-- COUNTDOWN TIMER DISPLAY ON WELCOME SCREEN -->
+            <div id="welcome-countdown" class="welcome-countdown-box">
+                <p class="countdown-label"><i class="fi fi-rr-clock"></i> Opens in:</p>
+                <div class="timer-grid">
+                    <div class="timer-unit"><span id="wc-days">00</span><label>Days</label></div>
+                    <div class="timer-unit"><span id="wc-hours">08</span><label>Hours</label></div>
+                    <div class="timer-unit"><span id="wc-mins">54</span><label>Mins</label></div>
+                    <div class="timer-unit"><span id="wc-secs">00</span><label>Secs</label></div>
+                </div>
+            </div>
+
+            <button id="start-btn" class="btn btn-primary">
+                <i id="start-btn-icon" class="fi fi-sr-play"></i> <span id="start-btn-text">Open Surprise & Play Music</span>
+            </button>
+            
+            <p class="welcome-tip"><i class="fi fi-rr-info"></i> Make sure your device volume is turned on!</p>
+        </div>
+    </div>
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="sticky top-0 z-40 bg-navyDeep/90 backdrop-blur-md border-b-2 border-dashed border-iceBlue/40 px-4 py-3 transition-all">
+        <div class="max-w-5xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <!-- Brand / Title -->
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl text-iceBlue flex items-center animate-bounce">
+                    <i class="fi fi-sr-gift text-2xl"></i>
+                </span>
+                <span class="font-playful text-xl md:text-2xl font-bold tracking-wider text-iceBlue">
+                    For You, My Favorite Person 💙
+                </span>
+            </div>
+
+            <!-- Tab Navigation Links -->
+            <nav class="flex items-center space-x-1 sm:space-x-2 bg-midnight/80 p-1.5 rounded-full border border-slateNavy">
+                <button onclick="switchTab('home')" id="tab-home" class="nav-btn active px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold font-playful transition-all bg-iceBlue text-navyDeep shadow-md flex items-center gap-1.5">
+                    <i class="fi fi-rr-home flex items-center text-sm"></i> Home
+                </button>
+                <button onclick="switchTab('letter')" id="tab-letter" class="nav-btn px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold font-playful transition-all text-warmIce hover:text-iceBlue flex items-center gap-1.5">
+                    <i class="fi fi-rr-envelope-open-text flex items-center text-sm"></i> Birthday Letter
+                </button>
+                <button onclick="switchTab('wishes')" id="tab-wishes" class="nav-btn px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold font-playful transition-all text-warmIce hover:text-iceBlue flex items-center gap-1.5">
+                    <i class="fi fi-rr-cake-birthday flex items-center text-sm"></i> Wishes
+                </button>
+            </nav>
+
+            <!-- Audio Control Button -->
+            <div class="flex items-center space-x-2">
+                <button id="musicToggleBtn" onclick="toggleMusic()" class="flex items-center space-x-2 bg-slateNavy hover:bg-slateNavy/80 text-iceBlue border border-iceBlue/50 px-3.5 py-1.5 rounded-full text-xs font-bold font-playful transition-transform active:scale-95 shadow-md">
+                    <i id="musicIcon" class="fi fi-rr-music-alt text-sm flex items-center"></i>
+                    <span id="musicText">Play Tune</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="max-w-5xl mx-auto w-full flex-grow p-4 md:p-6 relative">
+        
+        <!-- SECTION 1: HOME / HERO -->
+        <section id="sec-home" class="tab-content transition-all duration-500 block">
+            <div class="relative bg-navyDeep/90 rounded-3xl p-6 sm:p-10 border-2 border-iceBlue/40 backdrop-blur-sm shadow-2xl text-center overflow-hidden my-4">
+                
+                <!-- Corner Tape Graphics -->
+                <div class="washi-tape -top-3 left-8 w-28 -rotate-6"></div>
+                <div class="washi-tape -top-3 right-8 w-28 rotate-6"></div>
+
+                <!-- Animated Cake Icon -->
+                <div class="relative inline-block my-4">
+                    <div class="w-28 h-28 sm:w-36 sm:h-36 mx-auto bg-slateNavy/80 rounded-full flex items-center justify-center border-4 border-dashed border-iceBlue shadow-inner animate-pulse-slow cursor-pointer" onclick="triggerConfetti()">
+                        <i class="fi fi-sr-cake-birthday text-6xl sm:text-7xl text-iceBlue transform hover:scale-125 transition-transform"></i>
+                    </div>
+                    <span class="absolute -bottom-2 -right-2 bg-iceBlue text-navyDeep font-bold font-handwriting text-lg px-3 py-0.5 rounded-full shadow-lg transform rotate-12 flex items-center gap-1">
+                        <i class="fi fi-rr-sparkles text-xs"></i> Just for You!
+                    </span>
+                </div>
+
+                <!-- Personal Greeting Title -->
+                <h1 class="font-playful text-3xl sm:text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-iceBlue via-warmIce to-blue-200 my-4 tracking-wide leading-tight">
+                    Happy Birthday, <span class="underline decoration-dashed decoration-iceBlue">Bebii]</span>! 💙
+                </h1>
+            <!-- PAGE 1: HOME -->
+            <div id="home-page" class="page-section active">
+                <div class="hero-card">
+                    <div class="hero-tag"><i class="fi fi-rr-sparkles"></i> Wishing You The Best Day Ever</div>
+                    <!-- EDITABLE: Main Heading -->
+                    <h1 class="hero-title">Happy Birthday, <span class="text-accent">Bebii</span>! 🎉</h1>
+
+                    <!-- DYNAMIC COUNTDOWN DISPLAY ON HOME PAGE -->
+                    <div class="home-countdown-card">
+                        <div class="countdown-header"><i class="fi fi-rr-time-fast"></i> Birthday Countdown</div>
+                        <div class="timer-grid">
+                            <div class="timer-unit"><span id="hc-days">00</span><label>Days</label></div>
+                            <div class="timer-unit"><span id="hc-hours">08</span><label>Hours</label></div>
+                            <div class="timer-unit"><span id="hc-mins">54</span><label>Mins</label></div>
+                            <div class="timer-unit"><span id="hc-secs">00</span><label>Secs</label></div>
+                        </div>
+                        <p id="countdown-status-msg" class="countdown-status">⏳ Counting down to your special moment...</p>
+                    </div>
+
+                    <!-- EDITABLE: Subtitle / Paragraph -->
+
+                    <div class="home-actions">
+                        <button id="home-letter-btn" class="btn btn-primary nav-trigger" data-target="letter-page">
+                            <i class="fi fi-sr-envelope"></i> Read Your Envelope Letter
+                        </button>
+                        <button class="btn btn-secondary nav-trigger" data-target="wishes-page">
+                            <i class="fi fi-sr-comment-alt"></i> Pop Wishes & Leave Notes
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Call to Action Buttons -->
+                <div class="mt-4 flex flex-wrap justify-center gap-4">
+                    <button onclick="startExperience()" class="px-8 py-4 bg-gradient-to-r from-iceBlue to-cyan-400 text-navyDeep font-playful font-extrabold text-lg sm:text-xl rounded-full shadow-lg hover:shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center space-x-3 border-2 border-white">
+                        <i class="fi fi-rr-envelope text-xl flex items-center"></i>
+                        <span>Open Your Birthday Letter</span>
+                    </button>
+                </div>
+            </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: ANIMATED ENVELOPE & BIRTHDAY LETTER -->
+        <section id="sec-letter" class="tab-content transition-all duration-500 hidden">
+            <div class="my-6 max-w-3xl mx-auto relative">
+                
+                <div class="text-center mb-6">
+                    <h2 class="font-playful text-2xl sm:text-3xl font-bold text-iceBlue flex items-center justify-center gap-2">
+                        <i class="fi fi-rr-envelope-open text-2xl"></i> You've Got a Special Letter!
+                    </h2>
+                    <p class="font-handwriting text-2xl text-warmIce mt-1">
+                        Click the envelope below to open & unseal your birthday message.
+                    </p>
+                </div>
+
+                <!-- 3D Envelope Wrapper -->
+                <div class="envelope-wrapper my-8">
+                    <div id="scrapbookEnvelope" class="envelope" onclick="openEnvelope()">
+                        <!-- Envelope Flap -->
+                        <div class="envelope-flap flex items-center justify-center">
+                            <i class="fi fi-rr-sparkles text-2xl text-iceBlue mt-2"></i>
+                        </div>
+                        <!-- Envelope Heart Seal with Flaticon Solid Heart -->
+                        <div id="envelopeSeal" class="absolute top-[125px] left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-iceBlue text-navyDeep w-12 h-12 rounded-full flex items-center justify-center shadow-xl border-2 border-white z-30 transition-transform hover:scale-110">
+                            <i class="fi fi-sr-heart text-xl flex items-center"></i>
+                        </div>
+                        <!-- Pocket Graphic -->
+                        <div class="envelope-pocket"></div>
+
+                        <!-- Inside Sliding Letter Container -->
+                        <div id="envelopeLetter" class="envelope-letter paper-card">
+                            <div class="flex justify-between items-start border-b border-dashed border-iceBlue/40 pb-3 mb-4">
+                                <div>
+                                    <span class="stamp font-handwriting font-bold text-iceBlue text-sm flex items-center gap-1">
+                                        <i class="fi fi-rr-paper-plane text-xs"></i> PERSONAL & CONFIDENTIAL
+                                    </span>
+                                    <h3 class="font-handwriting text-3xl sm:text-4xl font-bold text-warmIce mt-2">
+                                        Dearest Bebii 💙,
+                                    </h3>
+                                </div>
+                                <div class="text-right font-handwriting text-iceBlue font-bold text-base">
+                                    Date: 11/15/2026 ✨<br>
+                                    To: My Favorite Person 💙
+                                </div>
+                            </div>
+
+                            <div class="font-handwriting text-2xl sm:text-3xl text-warmIce leading-relaxed space-y-4">
+                                <p>
+                                    Happiest birthday mybabyyy your first birthday with me>⁠.⁠<,
+                                </p>
+                                <p>
+                                    iloveyouu more than words can tell, i maybe far but i will always do my best to let u know how much u mean to me, may u get the happiness and the best life has to offer, whether im in or not on your side anymore i will always be proud of what u become, we may always have tampohan and silent treatment sometimes but always remember that my love is above all those things. i am so blessed and grateful to have you. through thick and thin, good times and bad times may u always remember that you are always loved, i am always cheering and celebrating with u from small wins to big ones. i wish u best of everything on what life has to offer for you
+                                </p>
+                                
+                                <!-- Secret Wish Accordion Section -->
+                                <div class="my-6 pt-2">
+                                    <button onclick="toggleSecretWish(event)" id="secretToggleBtn" class="w-full bg-slateNavy text-iceBlue border border-iceBlue/40 font-playful text-sm sm:text-base py-3 px-4 rounded-xl shadow hover:bg-softBlue transition-all flex items-center justify-between">
+                                        <span class="flex items-center gap-2"><i class="fi fi-rr-lock text-sm"></i> Tap to unlock secret birthday wishes for you!</span>
+                                        <i id="secretChevron" class="fi fi-rr-angle-small-down text-lg"></i>
+                                    </button>
+                                    
+                                    <div id="secretWishBox" class="hidden mt-4 p-5 bg-midnight/90 rounded-xl border-2 border-dashed border-iceBlue text-warmIce transition-all">
+                                        <p class="text-2xl font-bold text-iceBlue mb-2 flex items-center gap-1.5">
+                                            <i class="fi fi-rr-star text-lg"></i> My Promises & Wishes For You:
+                                        </p>
+                                        <ul class="list-disc list-inside space-y-2 text-xl sm:text-2xl">
+                                            <li>May your year be filled with unforgettable peaceful moments, happiness, and good health.</li>
+                                            <li>May all your personal goals unfold smoothly and effortlessly.</li>
+                                            <li>Always remember how deeply valued and loved you are!</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <p>
+                                    Enjoy your special day to the fullest. Thank you for being you! 🍰
+                                </p>
+                            </div>
+
+                            <!-- Signature & Stickers -->
+                            <div class="mt-8 pt-4 border-t border-dashed border-iceBlue/30 flex justify-between items-end">
+                                <div class="font-handwriting text-3xl font-bold text-warmIce">
+                                    With all my love & warmest wishes,<br>
+                                    <span class="text-iceBlue text-4xl">~ Yours Always 💙</span>
+                                </div>
+                                <div class="text-4xl text-iceBlue animate-bounce flex items-center">
+                                    <i class="fi fi-sr-balloon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: WISHES & GAMES -->
+        <section id="sec-wishes" class="tab-content transition-all duration-500 hidden">
+            <div class="my-4 space-y-8">
+                
+                <!-- Pop-the-Balloon Interactive Game Card -->
+                <div class="bg-navyDeep/90 rounded-3xl p-6 sm:p-8 border-2 border-iceBlue/40 backdrop-blur-sm text-center relative overflow-hidden">
+                    <div class="washi-tape -top-3 left-10 w-32 -rotate-2"></div>
+                    <h3 class="font-playful text-2xl sm:text-3xl font-bold text-iceBlue mb-2 flex items-center justify-center gap-2">
+                        <i class="fi fi-rr-balloon text-2xl"></i> Pop The Balloons For Secret Wishes!
+                    </h3>
+                    <p class="font-handwriting text-2xl text-warmIce mb-6">
+                        Click/Tap each balloon for a surprise popped message!
+                    </p>
+
+                    <!-- Interactive Balloons Container -->
+                    <div id="balloon-container" class="flex flex-wrap justify-center items-center gap-6 py-4">
+                        <button onclick="popBalloon(this, '💖 Pure Joy!')" class="balloon-btn text-5xl sm:text-6xl hover:scale-125 transition-transform animate-bounce text-iceBlue flex items-center justify-center">
+                            <i class="fi fi-sr-balloon"></i>
+                        </button>
+                        <button onclick="popBalloon(this, '🌟 Good Health!')" class="balloon-btn text-5xl sm:text-6xl hover:scale-125 transition-transform animate-bounce text-warmIce flex items-center justify-center" style="animation-delay: 0.2s;">
+                            <i class="fi fi-sr-balloon"></i>
+                        </button>
+                        <button onclick="popBalloon(this, '🚀 Big Dreams!')" class="balloon-btn text-5xl sm:text-6xl hover:scale-125 transition-transform animate-bounce text-cyan-400 flex items-center justify-center" style="animation-delay: 0.4s;">
+                            <i class="fi fi-sr-balloon"></i>
+                        </button>
+                        <button onclick="popBalloon(this, '🍰 Endless Cake!')" class="balloon-btn text-5xl sm:text-6xl hover:scale-125 transition-transform animate-bounce text-blue-300 flex items-center justify-center" style="animation-delay: 0.6s;">
+                            <i class="fi fi-sr-balloon"></i>
+                        </button>
+                        <button onclick="popBalloon(this, '💙 Endless Love!')" class="balloon-btn text-5xl sm:text-6xl hover:scale-125 transition-transform animate-bounce text-iceBlue flex items-center justify-center" style="animation-delay: 0.8s;">
+                            <i class="fi fi-sr-balloon"></i>
+                        </button>
+                    </div>
+                    <button onclick="resetBalloons()" class="mt-4 text-xs font-playful bg-slateNavy hover:bg-slateNavy/80 text-warmIce px-4 py-2 rounded-full border border-iceBlue/30 transition-all flex items-center justify-center mx-auto gap-1.5">
+                        <i class="fi fi-rr-refresh text-xs flex items-center"></i> Reset Balloons
+                    </button>
+                </div>
+
+                <!-- Wishbox Interactive Note Wall (Shades of Blue) -->
+                <div class="paper-card rounded-2xl p-6 sm:p-8 relative">
+                    <div class="washi-tape washi-tape-dark -top-3 right-10 w-36 rotate-3"></div>
+                    <h3 class="font-playful text-2xl sm:text-3xl font-bold text-iceBlue mb-4 flex items-center gap-2">
+                        <i class="fi fi-rr-edit text-warmIce"></i> Leave a Pinned Wish Note
+                    </h3>
+
+                    <!-- Input Form -->
+                    <div class="flex flex-col sm:flex-row gap-3 mb-6">
+                        <input type="text" id="wishInput" placeholder="Write a note here... (e.g. Hope your day is magical! ✨)" class="flex-grow p-3 rounded-xl border-2 border-iceBlue/40 bg-midnight text-warmIce font-body focus:outline-none focus:ring-2 focus:ring-iceBlue text-base">
+                        <button onclick="addWish()" class="px-6 py-3 bg-iceBlue hover:bg-warmIce text-navyDeep font-playful font-bold rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2">
+                            <span>Post Note</span> <i class="fi fi-rr-marker text-base"></i>
+                        </button>
+                    </div>
+
+                    <!-- Pinned Notes Container -->
+                    <div id="wishes-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <!-- Pre-populated wish note 1 -->
+                        <div class="bg-slateNavy border-2 border-dashed border-iceBlue/50 p-4 rounded-xl shadow transform -rotate-1 relative font-handwriting text-2xl text-warmIce">
+                            <span class="absolute -top-3 left-1/2 -translate-x-1/2 text-iceBlue text-base flex items-center">
+                                <i class="fi fi-sr-marker"></i>
+                            </span>
+                            "Wishing you the absolute happiest of birthdays! Stay awesome!"
+                        </div>
+                        <!-- Pre-populated wish note 2 -->
+                        <div class="bg-softBlue border-2 border-dashed border-iceBlue/50 p-4 rounded-xl shadow transform rotate-2 relative font-handwriting text-2xl text-warmIce">
+                            <span class="absolute -top-3 left-1/2 -translate-x-1/2 text-iceBlue text-base flex items-center">
+                                <i class="fi fi-sr-marker"></i>
+                            </span>
+                            "May all your wildest dreams come true this year! 🎉"
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Final Celebration Banner -->
+                <div class="text-center py-6">
+                    <button onclick="triggerConfettiSequence()" class="px-8 py-4 bg-gradient-to-r from-iceBlue via-cyan-300 to-iceBlue text-navyDeep font-playful font-extrabold text-xl sm:text-2xl rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-transform border-4 border-white animate-pulse flex items-center justify-center gap-2 mx-auto">
+                        <i class="fi fi-sr-party-horn text-2xl"></i>
+                        <span>Blast Birthday Confetti!</span>
+                        <i class="fi fi-sr-party-horn text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="text-center py-6 border-t border-slateNavy/40 text-warmIce/70 font-playful text-sm">
+        <p>Personalized Midnight Blue Scrapbook | Made specially for You 💙</p>
+    </footer>
+
+    <!-- External JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
